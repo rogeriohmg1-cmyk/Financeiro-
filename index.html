@@ -199,6 +199,18 @@ html,body{min-height:100%;background:#0f1318;color:#e8edf5;font-family:-apple-sy
 </head>
 <body>
 
+<div id="login-ov" style="position:fixed;inset:0;z-index:9999;background:#0f1318;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#1a2030;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:26px 22px;width:100%;max-width:340px">
+    <div style="font-size:18px;font-weight:700;color:#e8edf5;margin-bottom:4px">Gestão Financeira</div>
+    <div style="font-size:12px;color:#8a9ab5;margin-bottom:16px">Entre com seu e-mail e senha</div>
+    <input type="email" id="lg-email" placeholder="E-mail" autocomplete="username" style="width:100%;padding:11px;font-size:14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#222b3a;color:#e8edf5;margin-bottom:8px;font-family:inherit">
+    <input type="password" id="lg-pass" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;padding:11px;font-size:14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#222b3a;color:#e8edf5;margin-bottom:8px;font-family:inherit">
+    <div id="lg-err" style="color:#E24B4A;font-size:12px;min-height:16px;margin-bottom:8px"></div>
+    <button type="button" id="lg-btn" onclick="doLogin()" style="width:100%;background:#378ADD;color:#fff;border:0;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Entrar</button>
+    <div style="text-align:center;margin-top:12px"><a href="#" onclick="doReset();return false" style="font-size:12px;color:#8a9ab5">Esqueci a senha</a></div>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="topbar-icon"><i class="ti ti-report-money" style="font-size:18px;color:#fff"></i></div>
   <div style="flex:1"><h1>Gestão Financeira Diária</h1><p id="hsub">Carregando...</p></div>
@@ -206,9 +218,49 @@ html,body{min-height:100%;background:#0f1318;color:#e8edf5;font-family:-apple-sy
     <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#8a9ab5;display:inline-block"></span>
     <span id="sync-txt" style="color:#8a9ab5">--</span>
   </div>
+  <button type="button" onclick="doLogout()" title="Sair" style="border:1px solid rgba(255,255,255,.12);background:#222b3a;border-radius:8px;padding:5px 9px;font-size:12px;color:#8a9ab5;cursor:pointer;font-family:inherit">Sair</button>
 </div>
 
 <div class="app">
+
+  <div class="sec"><i class="ti ti-plus"></i> Novo lançamento</div>
+  <div class="fbox">
+    <div class="toggle-wrap">
+      <button class="tbtn" id="bte" onclick="setM('entrada')"><i class="ti ti-arrow-down-circle"></i> Entrada</button>
+      <button class="tbtn as" id="bts" onclick="setM('saida')"><i class="ti ti-arrow-up-circle"></i> Saída</button>
+    </div>
+    <div id="fsec" style="display:none;margin-bottom:14px">
+      <div style="font-size:12px;color:#8a9ab5;margin-bottom:8px">Forma de recebimento</div>
+      <div class="fgrid" id="fgrid"></div>
+    </div>
+    <div id="trow" class="tipo-row">
+      <label class="rlbl"><input type="radio" name="tipo" value="Variável" checked> Variável</label>
+      <label class="rlbl"><input type="radio" name="tipo" value="Fixo"> Fixo</label>
+    </div>
+    <div class="frow">
+      <div class="ff" id="acwrap">
+        <label id="lorig">Credor / Empresa</label>
+        <div class="ac-row">
+          <input type="text" id="ic" placeholder="Digite ou pesquise..." autocomplete="off" oninput="acF()" onkeydown="acK(event)" onfocus="acF()">
+          <button class="acx" id="acxb" onclick="acCl()"><i class="ti ti-x" style="font-size:12px"></i></button>
+        </div>
+        <div class="acdd" id="acdd"></div>
+      </div>
+      <div class="ff"><label>Descrição</label><input type="text" id="idd" placeholder="ex: Cartão de crédito"></div>
+    </div>
+    <div class="ff" style="margin-bottom:10px">
+      <label>Valor (R$)</label>
+      <input type="number" id="iv" placeholder="0,00" step="0.01" min="0" inputmode="decimal" style="max-width:200px">
+    </div>
+    <div class="cbrow" id="cbrow">
+      <input type="checkbox" id="chk">
+      <label for="chk">Repete no próximo mês?</label>
+    </div>
+    <button class="badd bs" id="badd" onclick="addL()">
+      <i class="ti ti-plus"></i> <span id="blbl">Adicionar saída</span>
+    </button>
+    <button type="button" onclick="lancarFixas2027()" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#222b3a;color:#8a9ab5;font-size:12.5px;font-family:inherit;cursor:pointer">📅 Lançar despesas fixas em 2027</button>
+  </div>
 
   <div class="sec"><i class="ti ti-calendar-stats"></i> Visão anual 2026</div>
   <div class="anual-strip">
@@ -248,50 +300,18 @@ html,body{min-height:100%;background:#0f1318;color:#e8edf5;font-family:-apple-sy
     <div style="position:relative;width:100%;height:190px"><canvas id="barC"></canvas></div>
   </div>
 
-  <div class="sec"><i class="ti ti-plus"></i> Novo lançamento</div>
-  <div class="fbox">
-    <div class="toggle-wrap">
-      <button class="tbtn" id="bte" onclick="setM('entrada')"><i class="ti ti-arrow-down-circle"></i> Entrada</button>
-      <button class="tbtn as" id="bts" onclick="setM('saida')"><i class="ti ti-arrow-up-circle"></i> Saída</button>
-    </div>
-    <div id="fsec" style="display:none;margin-bottom:14px">
-      <div style="font-size:12px;color:#8a9ab5;margin-bottom:8px">Forma de recebimento</div>
-      <div class="fgrid" id="fgrid"></div>
-    </div>
-    <div id="trow" class="tipo-row">
-      <label class="rlbl"><input type="radio" name="tipo" value="Variável" checked> Variável</label>
-      <label class="rlbl"><input type="radio" name="tipo" value="Fixo"> Fixo</label>
-    </div>
-    <div class="frow">
-      <div class="ff" id="acwrap">
-        <label id="lorig">Credor / Empresa</label>
-        <div class="ac-row">
-          <input type="text" id="ic" placeholder="Digite ou pesquise..." autocomplete="off" oninput="acF()" onkeydown="acK(event)" onfocus="acF()">
-          <button class="acx" id="acxb" onclick="acCl()"><i class="ti ti-x" style="font-size:12px"></i></button>
-        </div>
-        <div class="acdd" id="acdd"></div>
-      </div>
-      <div class="ff"><label>Descrição</label><input type="text" id="idd" placeholder="ex: Cartão de crédito"></div>
-    </div>
-    <div class="ff" style="margin-bottom:10px">
-      <label>Valor (R$)</label>
-      <input type="number" id="iv" placeholder="0,00" step="0.01" min="0" inputmode="decimal" style="max-width:200px">
-    </div>
-    <div class="cbrow" id="cbrow">
-      <input type="checkbox" id="chk">
-      <label for="chk">Repete no próximo mês?</label>
-    </div>
-    <button class="badd bs" id="badd" onclick="addL()">
-      <i class="ti ti-plus"></i> <span id="blbl">Adicionar saída</span>
-    </button>
-  </div>
-
   <div class="sec"><i class="ti ti-chart-pie"></i> Distribuição de despesas — <span id="mes-dist" style="color:#378ADD;text-transform:none;font-size:12px"></span></div>
   <div class="cbox">
     <div class="clayout">
       <div style="position:relative;width:100%;height:260px"><canvas id="pieC"></canvas></div>
       <div class="clist" id="clist"></div>
     </div>
+  </div>
+
+  <div class="sec"><i class="ti ti-chart-bar"></i> Gastos por credor — <span id="cred-per" style="color:#378ADD;text-transform:none;font-size:12px"></span></div>
+  <div class="cbox">
+    <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">Total no período: <strong id="cred-chart-total" style="color:#E24B4A">—</strong> <span style="margin-left:6px;color:#5a6a80">(toque numa barra para ver o detalhe)</span></div>
+    <div id="cred-chart-wrap" style="position:relative;width:100%;height:300px"><canvas id="credC"></canvas></div>
   </div>
 
   <div class="prog-wrap" id="prog-wrap">
@@ -449,28 +469,44 @@ function initFB() {
   } catch(e) { return false; }
 }
 
-// O banco do Firebase agora exige login pra ler/gravar (regra de segurança criada
-// pro MedVisit, que também usa esse mesmo projeto). Este app não tem tela de login,
-// então faz um login anônimo silencioso — sem senha, sem tela — só pra ser aceito.
+// O banco exige login (regra restrita ao UID da sua conta de e-mail/senha, a mesma do MedVisit).
+// Sem usuário logado, mostra a tela de login e espera. Sessões anônimas antigas são descartadas.
 let _fbAuthPromise = null;
 function fbAuthReady() {
   if (_fbAuthPromise) return _fbAuthPromise;
   _fbAuthPromise = new Promise((resolve) => {
-    const unsub = firebase.auth().onAuthStateChanged(user => {
-      if (user) { unsub(); resolve(true); return; }
-      firebase.auth().signInAnonymously()
-        .then(() => { unsub(); resolve(true); })
-        .catch(() => { unsub(); _fbAuthPromise = null; resolve(false); });
+    firebase.auth().onAuthStateChanged(user => {
+      if (user && user.isAnonymous) { firebase.auth().signOut(); return; }
+      if (user) { document.getElementById('login-ov').style.display = 'none'; resolve(true); }
+      else { document.getElementById('login-ov').style.display = 'flex'; }
     });
   });
   return _fbAuthPromise;
 }
+function doLogin(){
+  const em=document.getElementById('lg-email').value.trim(), pw=document.getElementById('lg-pass').value;
+  const er=document.getElementById('lg-err'), bt=document.getElementById('lg-btn');
+  er.textContent='';
+  if(!em||!pw){ er.textContent='Preencha e-mail e senha.'; return; }
+  if(!initFB()){ er.textContent='Firebase não conectado.'; return; }
+  bt.disabled=true; bt.textContent='Entrando...';
+  firebase.auth().signInWithEmailAndPassword(em,pw).then(()=>{ document.getElementById('lg-pass').value=''; }).catch(e=>{
+    const m={'auth/invalid-credential':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/user-not-found':'E-mail ou senha incorretos.','auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas. Aguarde um pouco.','auth/network-request-failed':'Sem conexão com a internet.','auth/operation-not-allowed':'Login por e-mail/senha não está ativado no Firebase.'};
+    er.textContent=m[e.code]||('Erro: '+e.code);
+  }).finally(()=>{ bt.disabled=false; bt.textContent='Entrar'; });
+}
+function doReset(){
+  const em=document.getElementById('lg-email').value.trim(), er=document.getElementById('lg-err');
+  if(!em){ er.style.color='#E24B4A'; er.textContent='Digite seu e-mail e toque de novo em "Esqueci a senha".'; return; }
+  firebase.auth().sendPasswordResetEmail(em).then(()=>{ er.style.color='#639922'; er.textContent='Link de redefinição enviado para o e-mail.'; }).catch(e=>{ er.style.color='#E24B4A'; er.textContent='Erro: '+e.code; });
+}
+function doLogout(){ firebase.auth().signOut().then(()=>location.reload()); }
 
 function fbLoad(callback) {
   if (!initFB()) { callback(null); return; }
   setSyncStatus('saving');
   fbAuthReady().then(ok => {
-    if (!ok) { setSyncStatus('err'); callback(null); return; }
+    if (!ok) { setSyncStatus('err'); callback(null, true); return; }
     fbRef.once('value').then(snap => {
       const data = snap.val();
       callback(data);
@@ -486,7 +522,7 @@ function fbLoad(callback) {
           if (_m) fbSave();
         }
       });
-    }).catch(() => { setSyncStatus('err'); callback(null); });
+    }).catch(() => { setSyncStatus('err'); callback(null, true); });
   });
 }
 
@@ -697,7 +733,73 @@ function togglePago(i){
   sD(d);rAll();
   showT(d[i].pago?'✅ Marcado como pago!':'⏳ Marcado como pendente');
 }
-function rAll(){rCards();rPie();rTable();rAnual();rBalao();}
+let crC=null;
+const credTotalsPlugin={id:'credTotals',afterDatasetsDraw(chart){
+  const ctx=chart.ctx; ctx.save(); ctx.fillStyle='#e8edf5'; ctx.font='11px sans-serif'; ctx.textBaseline='middle';
+  chart.getDatasetMeta(0).data.forEach((bar,i)=>{ ctx.fillText(fmt(chart.data.datasets[0].data[i]), bar.x+6, bar.y); });
+  ctx.restore();
+}};
+function rCredChart(){
+  const hoje=new Date(), ano=anoAtual;
+  const lim=(ano===hoje.getFullYear())?hoje.getMonth():11;
+  const map={};
+  for(let m=0;m<=lim;m++){
+    (todosDados[mk(ano,m)]||[]).forEach(d=>{
+      if(d.modo!=='saida'||!(d.v>0)) return;
+      const k=String(d.c).trim().toLowerCase();
+      if(!map[k]) map[k]={c:String(d.c).trim(),v:0,pago:0,pend:0,cor:d.cor||'#378ADD'};
+      map[k].v+=d.v; if(d.pago) map[k].pago+=d.v; else map[k].pend+=d.v;
+    });
+  }
+  const its=Object.values(map).sort((a,b)=>b.v-a.v);
+  const tot=its.reduce((s,x)=>s+x.v,0);
+  const yy=String(ano).slice(2);
+  document.getElementById('cred-per').textContent='Jan/'+yy+' → '+NM[lim]+'/'+yy;
+  document.getElementById('cred-chart-total').textContent=fmt(tot);
+  const wrap=document.getElementById('cred-chart-wrap');
+  wrap.style.height=Math.max(140, its.length*30+40)+'px';
+  if(crC){crC.destroy();crC=null;}
+  if(!its.length) return;
+  crC=new Chart(document.getElementById('credC'),{type:'bar',plugins:[credTotalsPlugin],
+    data:{labels:its.map(x=>x.c),datasets:[{label:'Total',data:its.map(x=>x.v),backgroundColor:its.map(x=>x.cor),borderWidth:0,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:95}},
+      onClick:(e,els)=>{ if(els.length) openCred(its[els[0].index].c); },
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:c=>' Total: '+fmt(c.raw),
+        afterBody:items=>{const x=its[items[0].dataIndex];return ['✅ Pago: '+fmt(x.pago),'⏳ A pagar: '+fmt(x.pend)];}}}},
+      scales:{x:{ticks:{color:'#8a9ab5',font:{size:10},callback:fmtK},grid:{color:'rgba(255,255,255,.05)'},border:{display:false}},
+              y:{ticks:{color:'#e8edf5',font:{size:11}},grid:{display:false},border:{color:'rgba(255,255,255,.05)'}}}}});
+}
+
+// Copia as despesas fixas do último mês de 2026 para os 12 meses de 2027.
+// Parcelas do tipo "21/48" continuam a contagem. Só adiciona; nunca apaga nem duplica.
+function lancarFixas2027(){
+  let srcM=-1;
+  for(let m=11;m>=0;m--){ if((todosDados[mk(2026,m)]||[]).some(d=>d.modo==='saida'&&d.t==='Fixo')){srcM=m;break;} }
+  if(srcM<0){ showT('Não achei despesas fixas em 2026 para copiar.',true); return; }
+  const base=(todosDados[mk(2026,srcM)]||[]).filter(d=>d.modo==='saida'&&d.t==='Fixo');
+  const tot=base.reduce((s,d)=>s+d.v,0);
+  if(!confirm('Copiar '+base.length+' despesas fixas ('+fmt(tot)+' por mês) de '+NM[srcM]+'/26 para Jan–Dez/2027?\n\nParcelas tipo "21/48" continuam a contagem. Nada existente é apagado.')) return;
+  let add=0;
+  for(let m=0;m<12;m++){
+    const key=mk(2027,m);
+    const arr=todosDados[key]||(todosDados[key]=[]);
+    const off=12+m-srcM;
+    base.forEach(b=>{
+      let desc=b.d;
+      const mt=String(b.d).match(/(\d+)\s*\/\s*(\d+)/);
+      if(mt){ const n=parseInt(mt[1],10)+off; if(n>parseInt(mt[2],10)) return; desc=String(b.d).replace(mt[0], n+'/'+mt[2]); }
+      const ja=arr.some(x=>x.modo==='saida'&&x.t==='Fixo'&&String(x.c).trim().toLowerCase()===String(b.c).trim().toLowerCase()&&x.d===desc);
+      if(ja) return;
+      arr.push({modo:'saida',t:'Fixo',c:b.c,d:desc,v:b.v,p:true,cor:b.cor,pago:false});
+      add++;
+    });
+  }
+  if(add){ fbSave(); rAll(); showT('✓ '+add+' despesas fixas lançadas em 2027!'); }
+  else showT('Já estava tudo lançado em 2027.');
+}
+
+function rAll(){rCards();rPie();rTable();rAnual();rBalao();rCredChart();}
 function rm(i){const d=gD();d.splice(i,1);sD(d);rAll();showT('Lançamento removido.');}
 
 function openEdit(i){
@@ -893,7 +995,8 @@ function openCred(nome){
 function closeCred(){document.getElementById('cred-modal').style.display='none';}
 
 bFC();rBalao();
-fbLoad(function(data) {
+fbLoad(function(data, falhou) {
+  if (falhou) { setSyncStatus('err'); rAll(); return; } // não sobrescreve a nuvem se a leitura falhou
   if (data && data.todosDados) {
     todosDados = data.todosDados;
     if (migrarCredores()) fbSave();
