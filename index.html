@@ -969,8 +969,10 @@ function isCartao(d) {
   return false;
 }
 
+// credores (não-cartão) que também podem ter "Detalhar gastos" — adicione outros aqui
+const CRED_DETALHAR = ['eu', 'ana', 'carro'];
 function isEu(d) {
-  return d && d.modo === 'saida' && String(d.c || '').trim().toLowerCase() === 'eu';
+  return d && d.modo === 'saida' && CRED_DETALHAR.includes(String(d.c || '').trim().toLowerCase());
 }
 function isDet(d) { return isCartao(d) || isEu(d); }
 
